@@ -20,8 +20,9 @@ def root():
 
 @app.post("/generate", response_model=StudyResponse)
 @limiter.limit("5/minute") 
-async def generate_study_notes(request: Request, body: StudyRequest):
+def generate_study_notes(request: Request, body: StudyRequest):
     try:
         return generate_notes(body.topic)
     except Exception as e:
+        print("ERROR: ",e)
         raise HTTPException(status_code=500, detail=str(e))
