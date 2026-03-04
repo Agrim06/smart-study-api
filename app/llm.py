@@ -10,7 +10,7 @@ from app.schemas import StudyResponse
 import logging
 
 logger = logging.getLogger(__name__)
-logger.info(f"Generating notes for the topic:{topic}")
+
 
 def _fallback_notes(topic: str) -> StudyResponse:
     """Deterministic offline/test-safe notes generation."""
@@ -29,7 +29,7 @@ def _fallback_notes(topic: str) -> StudyResponse:
             f"Give a real-world example of {topic}.",
         ],
     )
-
+    
 
 client: Optional[OpenAI] = None
 if OPENROUTER_API_KEY:
@@ -91,7 +91,7 @@ def _normalize_llm_payload(data: dict) -> dict:
 
 
 def generate_notes(topic: str) -> StudyResponse:
-
+    logger.info(f"Generating notes for the topic:{topic}")
     if client is None:
         return _fallback_notes(topic)
 

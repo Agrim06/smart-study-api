@@ -5,12 +5,19 @@ from app.rate_limit import limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi import _rate_limit_exceeded_handler
+import logging
+
+logging.basicConfig(
+    level = logging.INFO,
+    format = "%(asctime)s - %(levelname)s - %(message)s"
+)
 
 app = FastAPI()
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+
 
 
 @app.get("/")
