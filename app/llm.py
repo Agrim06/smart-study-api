@@ -90,8 +90,8 @@ def _normalize_llm_payload(data: dict) -> dict:
     return data
 
 
-def generate_notes(topic: str) -> StudyResponse:
-    logger.info(f"Generating notes for the topic:{topic}")
+def generate_notes(topic: str , difficulty: str) -> StudyResponse:
+    logger.info(f"Generating {difficulty} level notes for the topic:{topic}")
     if client is None:
         return _fallback_notes(topic)
 
@@ -103,15 +103,24 @@ def generate_notes(topic: str) -> StudyResponse:
                     "role": "system",
                     "content": "You are a structured study assistant. Always return valid JSON only.",
                 },
-                {
+               {
                     "role": "user",
                     "content": f"""
-                    Generate structured study notes for: {topic}
+                    Generate {difficulty} level study notes for: {topic}
 
-                    Return ONLY valid JSON with:
-                    title, summary, key_concepts, examples, practice_questions
-                    """,
-                },
+                    Return ONLY valid JSON in this exact format:
+
+                    {{
+                    "title": "string",
+                    "summary": "string",
+                    "key_concepts": ["string","string"],
+                    "examples": ["string"],
+                    "practice_questions": ["string","string"]
+                    }}
+
+                    Do not include explanations or text outside the JSON.
+                    """
+                    }
             ],
             temperature=0.7,
         )

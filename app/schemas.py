@@ -1,8 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List
 
 class StudyRequest(BaseModel):
-    topic: str
+    topic: str = Field(... , min_length=3 , max_length= 100)
+    difficulty: str = "medium"
 
 class StudyResponse(BaseModel):
     title:str

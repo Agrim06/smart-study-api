@@ -29,7 +29,7 @@ def root():
 @limiter.limit("5/minute") 
 def generate_study_notes(request: Request, body: StudyRequest):
     try:
-        return generate_notes(body.topic)
+        return generate_notes(body.topic , body.difficulty)
     except Exception as e:
         print("ERROR: ",e)
         raise HTTPException(status_code=500, detail=str(e))
