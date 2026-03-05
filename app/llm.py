@@ -6,6 +6,7 @@ from pydantic import ValidationError
 
 from app.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
 from app.schemas import StudyResponse
+from app.cache import cache
 
 import logging
 
@@ -92,8 +93,20 @@ def _normalize_llm_payload(data: dict) -> dict:
 
 def generate_notes(topic: str , difficulty: str) -> StudyResponse:
     logger.info(f"Generating {difficulty} level notes for the topic:{topic}")
+
+    cache_key = f"{topic}:{difficulty}"
+
+    if cache_key in cache:
+        logger.info(f"Cache HIT for {cache_key}")
+        return cache[cache_key]
+    else:
+        logger.info(f"Cache MISS for {cache_key}")
+
     if client is None:
-        return _fallback_notes(topic)
+        fallback = _fallback_notes(topic)
+
+        cache[cache_key] = fallback
+        return fallback
 
     try:
         response = client.chat.completions.create(
@@ -133,7 +146,12 @@ def generate_notes(topic: str , difficulty: str) -> StudyResponse:
 
         data = json.loads(content)
         normalized = _normalize_llm_payload(data)
-        return StudyResponse(**normalized)
+
+        result = StudyResponse(**normalized)
+        cache[cache_key] = result
+
+        return result
+    
     except (json.JSONDecodeError, ValidationError, Exception) as e:
         print("LLM ERROR:", e)
         return _fallback_notes(topic)
