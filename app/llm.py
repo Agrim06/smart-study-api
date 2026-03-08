@@ -6,8 +6,7 @@ from pydantic import ValidationError
 
 from app.config import OPENROUTER_API_KEY, OPENROUTER_BASE_URL, OPENROUTER_MODEL
 from app.schemas import StudyResponse
-from app.cache import cache
-
+from app.cache import get_cached_notes, set_cached_notes
 import logging
 
 logger = logging.getLogger(__name__)
@@ -94,18 +93,19 @@ def _normalize_llm_payload(data: dict) -> dict:
 def generate_notes(topic: str , difficulty: str) -> StudyResponse:
     logger.info(f"Generating {difficulty} level notes for the topic:{topic}")
 
-    cache_key = f"{topic}:{difficulty}"
+    cache_key = f"notes:{topic}:{difficulty}"
 
-    if cache_key in cache:
-        logger.info(f"Cache HIT for {cache_key}")
-        return cache[cache_key]
+    cached = get_cached_notes(cache_key)
+
+    if cached:
+        logger.info(f"CACHE HIT : {cache_key}")
+        return cached
     else:
-        logger.info(f"Cache MISS for {cache_key}")
-
+        logger.info(f"CACHE MISS : {cache_key}")
+    
     if client is None:
         fallback = _fallback_notes(topic)
-
-        cache[cache_key] = fallback
+        set_cached_notes(cache_key, fallback)
         return fallback
 
     try:
@@ -148,7 +148,7 @@ def generate_notes(topic: str , difficulty: str) -> StudyResponse:
         normalized = _normalize_llm_payload(data)
 
         result = StudyResponse(**normalized)
-        cache[cache_key] = result
+        set_cached_notes(cache_key, result)
 
         return result
     
